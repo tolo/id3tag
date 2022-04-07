@@ -6,14 +6,13 @@ import 'extensions/iterable_extension.dart';
 import 'frames/frames.dart';
 import 'frames/chapter_frame.dart';
 
-
 class ID3Tag {
-
   final String tagVersion;
   final bool tagFound;
   final List<Frame> frames;
 
-  List<Map<String, dynamic>> get frameDictionaries => frames.map((e) => e.toDictionary()).toList();
+  List<Map<String, dynamic>> get frameDictionaries =>
+      frames.map((e) => e.toDictionary()).toList();
 
   String? get title => frameWithTypeAndName<TextInformation>('TIT2')?.value;
 
@@ -27,7 +26,9 @@ class ID3Tag {
 
   Duration? get duration {
     final durationRaw = frameWithTypeAndName<TextInformation>('TLEN')?.value;
-    return durationRaw != null && durationRaw.isNotEmpty ? Duration(milliseconds: int.parse(durationRaw)) : null;
+    return durationRaw != null && durationRaw.isNotEmpty
+        ? Duration(milliseconds: int.parse(durationRaw))
+        : null;
   }
 
   List<Picture> get pictures => framesWithTypeAndName<Picture>('APIC');
@@ -40,34 +41,30 @@ class ID3Tag {
   /// start time.
   List<Chapter> get chapters {
     final _chapters = framesWithType<Chapter>();
-    _chapters.sort((a, b) => a.startTimeMilliseconds.compareTo(b.startTimeMilliseconds));
+    _chapters.sort(
+        (a, b) => a.startTimeMilliseconds.compareTo(b.startTimeMilliseconds));
     return _chapters;
   }
 
+  List<TableOfContents> get tableOfContents =>
+      framesWithType<TableOfContents>();
 
-  ID3Tag({required this.tagVersion, required this.tagFound, required this.frames});
-
+  ID3Tag(
+      {required this.tagVersion, required this.tagFound, required this.frames});
 
   /// Returns all frame matching the specified [name]
   List<Frame> framesWithName(String name) {
-    return frames
-        .where((e) => e.frameName == name)
-        .toList();
+    return frames.where((e) => e.frameName == name).toList();
   }
 
   /// Returns all frame matching the specified [name] and type
   List<T> framesWithType<T extends Frame>() {
-    return frames
-        .whereType<T>()
-        .toList();
+    return frames.whereType<T>().toList();
   }
 
   /// Returns all frame matching the specified [name] and type
   List<T> framesWithTypeAndName<T extends Frame>(String name) {
-    return frames
-        .whereType<T>()
-        .where((e) => e.frameName == name)
-        .toList();
+    return frames.whereType<T>().where((e) => e.frameName == name).toList();
   }
 
   /// Returns the first frame with the specified [name] and type
@@ -80,5 +77,3 @@ class ID3Tag {
     return framesWithTypeAndName<T>(name).firstIfAny();
   }
 }
-
-

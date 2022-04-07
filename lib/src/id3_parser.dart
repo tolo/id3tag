@@ -13,17 +13,16 @@ import 'id3_tag.dart';
 import 'id3_tag_reader.dart';
 import 'raw_frame.dart';
 
-
 class ID3Parser implements ID3TagReader {
-
   static const int id3FileHeaderLength = 10;
 
-  static final Map<String, FrameParser> _defaultParsers = _setupDefaultParsers();
-
+  static final Map<String, FrameParser> _defaultParsers =
+      _setupDefaultParsers();
 
   final Map<String, FrameParser> _parsers;
 
-  @override bool get id3TagFound => id3FileHeader.id3TagSize > 0;
+  @override
+  bool get id3TagFound => id3FileHeader.id3TagSize > 0;
 
   final _ID3FileHeader id3FileHeader;
 
@@ -37,21 +36,31 @@ class ID3Parser implements ID3TagReader {
   final _frameNameMatcher = RegExp(r'[A-Z0-9]+');
 
   final List<Frame> _parsedFrames = [];
-  @override ID3Tag get tag => ID3Tag(tagVersion: id3FileHeader.id3TagVersion, tagFound: id3TagFound, frames: _parsedFrames);
+  @override
+  ID3Tag get tag => ID3Tag(
+      tagVersion: id3FileHeader.id3TagVersion,
+      tagFound: id3TagFound,
+      frames: _parsedFrames);
 
-
-  ID3Parser._raw({required Map<String, FrameParser> frameParsers, required this.id3FileHeader,
-    required List<int> id3TagBytes, required int initialOffset}) :
-        _parsers = frameParsers, _id3TagBytes = id3TagBytes, _initialOffset = initialOffset;
+  ID3Parser._raw(
+      {required Map<String, FrameParser> frameParsers,
+      required this.id3FileHeader,
+      required List<int> id3TagBytes,
+      required int initialOffset})
+      : _parsers = frameParsers,
+        _id3TagBytes = id3TagBytes,
+        _initialOffset = initialOffset;
 
   factory ID3Parser(File file, {Map<String, FrameParser>? frameParsers}) {
     final RandomAccessFile _reader = file.openSync(mode: FileMode.read);
 
     try {
       final length = _reader.lengthSync();
-      final List<int> fileHeaderBytes = length > 10 ? _reader.readSync(id3FileHeaderLength) : [];
+      final List<int> fileHeaderBytes =
+          length > 10 ? _reader.readSync(id3FileHeaderLength) : [];
       // Assume ID3 tag is at beginning of file
-      final List<int>? id3FileTag = fileHeaderBytes.length == 10 ? fileHeaderBytes.sublist(0, 3) : null;
+      final List<int>? id3FileTag =
+          fileHeaderBytes.length == 10 ? fileHeaderBytes.sublist(0, 3) : null;
 
       if (id3FileTag != null && latin1.decode(id3FileTag) == 'ID3') {
         final headerBytes = fileHeaderBytes.toList();
@@ -62,20 +71,26 @@ class ID3Parser implements ID3TagReader {
         int initialOffset = 0;
         if (header.hasExtendedHeader) {
           final extendedHeaderSize = id3TagBytes.sublist(0, 4).parseInt();
-          initialOffset = extendedHeaderSize + 4; // Size doesn't include size itself
+          initialOffset =
+              extendedHeaderSize + 4; // Size doesn't include size itself
         }
 
-        return ID3Parser._raw(frameParsers: frameParsers ?? ID3Parser._defaultParsers, id3FileHeader: header,
-            id3TagBytes: id3TagBytes, initialOffset: initialOffset);
+        return ID3Parser._raw(
+            frameParsers: frameParsers ?? ID3Parser._defaultParsers,
+            id3FileHeader: header,
+            id3TagBytes: id3TagBytes,
+            initialOffset: initialOffset);
       } else {
-        return ID3Parser._raw(frameParsers: {}, id3FileHeader: _ID3FileHeader.empty(),
-            id3TagBytes: [], initialOffset: 0);
+        return ID3Parser._raw(
+            frameParsers: {},
+            id3FileHeader: _ID3FileHeader.empty(),
+            id3TagBytes: [],
+            initialOffset: 0);
       }
     } finally {
       _reader.closeSync();
     }
   }
-
 
   @override
   Future<ID3Tag> readTag() async {
@@ -85,7 +100,8 @@ class ID3Parser implements ID3TagReader {
 
   @override
   ID3Tag readTagSync() {
-    if (!id3TagFound) return ID3Tag(tagVersion: '', tagFound: false, frames: []);
+    if (!id3TagFound)
+      return ID3Tag(tagVersion: '', tagFound: false, frames: []);
     _parsedFrames.clear();
 
     int offset = _initialOffset;
@@ -114,7 +130,8 @@ class ID3Parser implements ID3TagReader {
   RawFrame? parseRawFrame(List<int> buffer, {int offset = 0}) {
     if (buffer.length < (offset + _frameHeaderLength)) return null;
 
-    final List<int> frameHeader = buffer.sublist(offset, offset + _frameHeaderLength);
+    final List<int> frameHeader =
+        buffer.sublist(offset, offset + _frameHeaderLength);
     final List<int> frameNameBytes = frameHeader.sublist(0, _frameNameLength);
     final String frameName = latin1.decode(frameNameBytes);
 
@@ -122,22 +139,26 @@ class ID3Parser implements ID3TagReader {
       return null;
     }
 
-    int frameContentSize = frameHeader.sublist(_frameNameLength, _frameNameLength + _frameSizeLength).parseInt();
-    final List<int> frameContent = buffer.sublist(offset + _frameHeaderLength, offset + _frameHeaderLength + frameContentSize);
+    int frameContentSize = frameHeader
+        .sublist(_frameNameLength, _frameNameLength + _frameSizeLength)
+        .parseInt();
+    final List<int> frameContent = buffer.sublist(offset + _frameHeaderLength,
+        offset + _frameHeaderLength + frameContentSize);
 
-    return RawFrame(this, frameName, _frameHeaderLength + frameContentSize, frameContent);
+    return RawFrame(
+        this, frameName, _frameHeaderLength + frameContentSize, frameContent);
   }
-
 
   static Map<String, FrameParser> _setupDefaultParsers() {
     Map<String, FrameParser> parserMap = {};
     // ignore: prefer_function_declarations_over_variables
-    final addParser = (FrameParser parser) => parserMap.addEntries(parser.frameNames.map((e) => MapEntry(e, parser)));
+    final addParser = (FrameParser parser) =>
+        parserMap.addEntries(parser.frameNames.map((e) => MapEntry(e, parser)));
 
     addParser(ChapterFrameParser());
     addParser(CommentFrameParser());
     addParser(PictureFrameParser());
-    //addParser(TableOfContentsFrameParser()); // TODO
+    addParser(TableOfContentsFrameParser());
     addParser(TextInformationFrameParser());
     //addParser(UrlFrameParser()); // TODO
     addParser(UserUrlFrameParser());
@@ -146,9 +167,9 @@ class ID3Parser implements ID3TagReader {
   }
 }
 
-
 class _ID3FileHeader {
   final String id3TagVersion;
+
   /// The ID3 minor version, i.e. the X in 2.X.0
   final int tagMinorVersion;
 
@@ -158,13 +179,16 @@ class _ID3FileHeader {
   final int frameNameLength = 4;
   final int frameSizeLength = 4;
   final int frameTagLength = 2;
-  late final int frameHeaderLength = frameNameLength + frameSizeLength + frameTagLength;
+  late final int frameHeaderLength =
+      frameNameLength + frameSizeLength + frameTagLength;
 
   final bool hasExtendedHeader;
 
-
-  _ID3FileHeader.raw({required this.id3TagVersion, required this.tagMinorVersion, required this.id3TagSize,
-    required this.hasExtendedHeader});
+  _ID3FileHeader.raw(
+      {required this.id3TagVersion,
+      required this.tagMinorVersion,
+      required this.id3TagSize,
+      required this.hasExtendedHeader});
 
   factory _ID3FileHeader.fromHeaderBytes(List<int> headerBytes) {
     final int tagMinorVersion = headerBytes[3];
@@ -186,6 +210,10 @@ class _ID3FileHeader {
   }
 
   factory _ID3FileHeader.empty() {
-    return _ID3FileHeader.raw(id3TagVersion: '-', tagMinorVersion: 0, id3TagSize: 0, hasExtendedHeader: false);
+    return _ID3FileHeader.raw(
+        id3TagVersion: '-',
+        tagMinorVersion: 0,
+        id3TagSize: 0,
+        hasExtendedHeader: false);
   }
 }
