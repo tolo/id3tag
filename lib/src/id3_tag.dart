@@ -18,6 +18,7 @@ class ID3Tag {
   String? get title => frameWithTypeAndName<TextInformation>('TIT2')?.value;
 
   String? get artist => frameWithTypeAndName<TextInformation>('TPE1')?.value;
+  Transcription? get lyric => frameWithTypeAndName<Transcription>('USLT');
 
   String? get album => frameWithTypeAndName<TextInformation>('TALB')?.value;
 
