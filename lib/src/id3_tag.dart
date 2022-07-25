@@ -80,5 +80,3 @@ class ID3Tag {
     return framesWithTypeAndName<T>(name).firstIfAny();
   }
 }
-
-

@@ -25,7 +25,9 @@ class ID3Parser implements ID3TagReader {
 
   @override bool get id3TagFound => id3FileHeader.id3TagSize > 0;
 
-  final _ID3FileHeader id3FileHeader;
+  int get id3CompleteTagSize => id3FileHeaderLength + _id3TagBytes.length;
+
+  final ID3FileHeader id3FileHeader;
 
   final List<int> _id3TagBytes;
   final int _initialOffset;
@@ -49,26 +51,26 @@ class ID3Parser implements ID3TagReader {
 
     try {
       final length = _reader.lengthSync();
-      final List<int> fileHeaderBytes = length > 10 ? _reader.readSync(id3FileHeaderLength) : [];
+      final List<int> fileHeaderBytes = length > id3FileHeaderLength ? _reader.readSync(id3FileHeaderLength) : [];
       // Assume ID3 tag is at beginning of file
-      final List<int>? id3FileTag = fileHeaderBytes.length == 10 ? fileHeaderBytes.sublist(0, 3) : null;
+      final List<int>? id3FileTag = fileHeaderBytes.length == id3FileHeaderLength ? fileHeaderBytes.sublist(0, 3) : null;
 
       if (id3FileTag != null && latin1.decode(id3FileTag) == 'ID3') {
         final headerBytes = fileHeaderBytes.toList();
-        final header = _ID3FileHeader.fromHeaderBytes(headerBytes);
+        final header = ID3FileHeader.fromHeaderBytes(headerBytes);
 
         final id3TagBytes = _reader.readSync(header.id3TagSize);
 
         int initialOffset = 0;
         if (header.hasExtendedHeader) {
-          final extendedHeaderSize = id3TagBytes.sublist(0, 4).parseInt();
+          final extendedHeaderSize = id3TagBytes.sublist(0, 4).parseInt(header.tagMinorVersion);
           initialOffset = extendedHeaderSize + 4; // Size doesn't include size itself
         }
 
         return ID3Parser._raw(frameParsers: frameParsers ?? ID3Parser._defaultParsers, id3FileHeader: header,
             id3TagBytes: id3TagBytes, initialOffset: initialOffset);
       } else {
-        return ID3Parser._raw(frameParsers: {}, id3FileHeader: _ID3FileHeader.empty(),
+        return ID3Parser._raw(frameParsers: {}, id3FileHeader: ID3FileHeader.empty(),
             id3TagBytes: [], initialOffset: 0);
       }
     } finally {
@@ -122,8 +124,10 @@ class ID3Parser implements ID3TagReader {
       return null;
     }
 
-    int frameContentSize = frameHeader.sublist(_frameNameLength, _frameNameLength + _frameSizeLength).parseInt();
-    final List<int> frameContent = buffer.sublist(offset + _frameHeaderLength, offset + _frameHeaderLength + frameContentSize);
+    int frameContentSize = frameHeader.sublist(_frameNameLength, _frameNameLength + _frameSizeLength)
+        .parseInt(id3FileHeader.tagMinorVersion);
+    final List<int> frameContent = buffer
+        .sublist(offset + _frameHeaderLength, offset + _frameHeaderLength + frameContentSize);
 
     return RawFrame(this, frameName, _frameHeaderLength + frameContentSize, frameContent);
   }
@@ -147,7 +151,7 @@ class ID3Parser implements ID3TagReader {
 }
 
 
-class _ID3FileHeader {
+class ID3FileHeader {
   final String id3TagVersion;
   /// The ID3 minor version, i.e. the X in 2.X.0
   final int tagMinorVersion;
@@ -163,10 +167,10 @@ class _ID3FileHeader {
   final bool hasExtendedHeader;
 
 
-  _ID3FileHeader.raw({required this.id3TagVersion, required this.tagMinorVersion, required this.id3TagSize,
+  ID3FileHeader.raw({required this.id3TagVersion, required this.tagMinorVersion, required this.id3TagSize,
     required this.hasExtendedHeader});
 
-  factory _ID3FileHeader.fromHeaderBytes(List<int> headerBytes) {
+  factory ID3FileHeader.fromHeaderBytes(List<int> headerBytes) {
     final int tagMinorVersion = headerBytes[3];
     final int tagMicroVersion = headerBytes[4];
     final int flag = headerBytes[5];
@@ -177,7 +181,7 @@ class _ID3FileHeader {
 
     final id3TagSize = headerBytes.sublist(6, 10).parseID3FileHeaderSize();
 
-    return _ID3FileHeader.raw(
+    return ID3FileHeader.raw(
       id3TagVersion: '2.$tagMinorVersion.$tagMicroVersion',
       tagMinorVersion: tagMinorVersion,
       id3TagSize: id3TagSize,
@@ -185,7 +189,7 @@ class _ID3FileHeader {
     );
   }
 
-  factory _ID3FileHeader.empty() {
-    return _ID3FileHeader.raw(id3TagVersion: '-', tagMinorVersion: 0, id3TagSize: 0, hasExtendedHeader: false);
+  factory ID3FileHeader.empty() {
+    return ID3FileHeader.raw(id3TagVersion: '-', tagMinorVersion: 0, id3TagSize: 0, hasExtendedHeader: false);
   }
 }

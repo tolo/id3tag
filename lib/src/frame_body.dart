@@ -11,10 +11,11 @@ import 'exceptions.dart';
 
 class FrameBody {
   final List<int> buffer;
+  final int tagMinorVersion;
   int pos = 0;
   int lastEncoding = 0x00; // default to latin1
 
-  FrameBody(this.buffer);
+  FrameBody(this.buffer, this.tagMinorVersion);
 
   List<int> readUntilTerminator(List<int> terminator, {bool aligned = false, bool terminatorMandatory = true}) {
     if (remainingBytes == 0) {
@@ -131,7 +132,7 @@ class FrameBody {
   }
 
   int readInt() {
-    return readBytes(4).parseInt();
+    return readBytes(4).parseInt(tagMinorVersion);
   }
 
   List<int> readRemainingBytes() {

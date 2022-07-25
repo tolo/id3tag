@@ -14,7 +14,7 @@ class RawFrame {
   final FrameBody frameContent;
 
   RawFrame(this.id3Parser, this.frameName, this.frameSize, List<int> frameContentBytes) :
-        frameContent = FrameBody(frameContentBytes);
+        frameContent = FrameBody(frameContentBytes, id3Parser.id3FileHeader.tagMinorVersion);
 
 
   RawFrame? parseRawSubFrame(List<int> buffer, {int offset = 0}) {
