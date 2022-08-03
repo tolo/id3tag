@@ -145,6 +145,7 @@ class ID3Parser implements ID3TagReader {
     addParser(TextInformationFrameParser());
     //addParser(UrlFrameParser()); // TODO
     addParser(UserUrlFrameParser());
+    addParser(TranscriptionFrameParser());
 
     return parserMap;
   }

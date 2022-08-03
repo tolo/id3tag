@@ -35,4 +35,11 @@ void main() {
     final frame = tag.frames.firstWhereOrNull((f) => f.frameName == 'APIC');
     expect(frame, isNotNull);
   });
+
+  test('Tag should contain lyrics', () {
+    final parser = ID3Parser(File('test/apic.mp3')); // apic test file also contains uslt
+    final tag = parser.readTagSync();
+    final frame = tag.frames.firstWhereOrNull((f) => f.frameName == 'USLT');
+    expect(frame, isNotNull);
+  });
 }

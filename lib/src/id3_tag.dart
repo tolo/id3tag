@@ -44,6 +44,9 @@ class ID3Tag {
     return _chapters;
   }
 
+  /// Gets the unsynchronized lyric/text transcription ('USLT') frame, represented as a [Lyrics] object.
+  List<Lyrics> get lyrics => framesWithTypeAndName<Lyrics>('USLT');
+
 
   ID3Tag({required this.tagVersion, required this.tagFound, required this.frames});
 
