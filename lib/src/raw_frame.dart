@@ -5,6 +5,7 @@
 import 'frames/frame.dart';
 import 'frame_body.dart';
 import 'id3_parser.dart';
+import 'extensions/iterable_extension.dart';
 
 
 class RawFrame {
@@ -28,5 +29,16 @@ class RawFrame {
       frameContent.pos += rawSubFrame.frameSize;
       return id3Parser.parseSubFrame(rawSubFrame);
     }
+    return null;
+  }
+
+  List<Frame> parseSubFrames() {
+    List<Frame> subFrames = [];
+    var pos = 0;
+    do {
+      pos = frameContent.pos;
+      subFrames.addNotNull(parseSubFrame());
+    } while (frameContent.remainingBytes > 0 && frameContent.pos != pos);
+    return subFrames;
   }
 }

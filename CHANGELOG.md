@@ -3,6 +3,8 @@
 ##Version 0.2.0
 
 ### Features
+* Added support for table of contents (CTOC). Resolved with input from [pull request 2](https://github.com/tolo/id3tag/issues/2), added by @szeidner.
+* Added support for picture and url fields in chapter frames (CHAP). Resolved with input from [pull request 2](https://github.com/tolo/id3tag/issues/2), added by @szeidner.
 * Enabled previously commented out support for unsync lyrics/transcription frames (USLT). Resolved with input from [pull request 3](https://github.com/tolo/id3tag/issues/3), added by @theckr96.
 
 ### Bug fixes

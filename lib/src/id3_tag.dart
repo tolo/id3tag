@@ -4,7 +4,6 @@
 
 import 'extensions/iterable_extension.dart';
 import 'frames/frames.dart';
-import 'frames/chapter_frame.dart';
 
 
 class ID3Tag {
@@ -36,12 +35,29 @@ class ID3Tag {
   Comment? get comment => frameWithTypeAndName<Comment>('COMM');
   List<Comment> get comments => framesWithTypeAndName<Comment>('COMM');
 
-  /// Gets the chapter (`CHAP`) frames, represented as [Chapter] objects. The returned chapters are sorted according to
-  /// start time.
+  /// Gets all the chapter (`CHAP`) frames defined in the tag, represented as [Chapter] objects. The returned chapters
+  /// are sorted according to start time. **NOTE: ** Consider getting chapters via table of contents or by using
+  /// [topLevelChapters].
   List<Chapter> get chapters {
-    final _chapters = framesWithType<Chapter>();
-    _chapters.sort((a, b) => a.startTimeMilliseconds.compareTo(b.startTimeMilliseconds));
-    return _chapters;
+    final chapters = framesWithType<Chapter>();
+    chapters.sort((a, b) => a.startTimeMilliseconds.compareTo(b.startTimeMilliseconds));
+    return chapters;
+  }
+
+  /// Gets the table of contents (`CTOC`) frames, represented as [TableOfContents] objects.
+  List<TableOfContents> get tableOfContents => framesWithType<TableOfContents>();
+  /// Gets the the top level table of contents (`CTOC`) frame or the first one if no top level is found.
+  TableOfContents? get topLevelTOC {
+    final toc = tableOfContents;
+    return toc.firstWhereOrNull((toc) => toc.isTopLevel) ?? toc.firstIfAny();
+  }
+
+  /// Gets all the chapters referenced by the top level table of contents (or the first one). Falls back to [chapters]
+  /// if no table of contents frame is present.
+  List<Chapter> get topLevelChapters {
+    final toc = topLevelTOC;
+    if (toc != null && toc.childElementIds.isNotEmpty) { return chaptersForTOC(toc); }
+    else { return chapters; }
   }
 
   /// Gets the unsynchronized lyric/text transcription ('USLT') frame, represented as a [Lyrics] object.
@@ -81,5 +97,19 @@ class ID3Tag {
   /// Returns the first frame with the specified [name] and type
   T? frameWithTypeAndName<T extends Frame>(String name) {
     return framesWithTypeAndName<T>(name).firstIfAny();
+  }
+
+  /// Gets the chapters matching the element ids in the specified [TableOfContents] object.
+  List<Chapter> chaptersForTOC(TableOfContents toc) {
+    final chapters = framesWithType<Chapter>();
+    List<Chapter> tocChapters = [];
+    for (var elementId in toc.childElementIds) {
+      final index = chapters.indexWhere((c) => c.elementId == elementId);
+      if (index > -1) {
+        tocChapters.add(chapters[index]);
+        chapters.removeAt(index);
+      }
+    }
+    return tocChapters;
   }
 }

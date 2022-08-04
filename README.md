@@ -4,7 +4,7 @@ ID3Tag is a small library for reading common ID3 meta data from mp3-files and ot
 There are of course already other libraries for doing this out there, but at the time of creating this library, none of 
 them provided support in three critical areas: 
 
-- Reading **chapter** (`CHAP`) frames
+- Reading **chapter** (`CHAP`) and **table of contents** (`CTOC`) frames
 - Reading ID3 meta data without having to load the entire file into memory
 - Easy extensibility to be able to implement support for additional frame types
 
@@ -17,7 +17,8 @@ audio books was another motivating factor (hence support for chapters and large 
 - Support for ID3 v2.3 (and above)
 - Support for common ID3 frames, such as:
     - Text information frames [see here](https://id3.org/id3v2.3.0#Text_information_frames) 
-    - Chapter frames, i.e. [`CHAP` frames](https://id3.org/id3v2-chapters-1.0)
+    - Chapter frames, i.e. [`CHAP` frames](https://id3.org/id3v2-chapters-1.0#Chapter_frame)
+    - Table of contents frames, i.e. [`CTOC` frames](https://id3.org/id3v2-chapters-1.0#Table_of_contents_frame)
     - Attached picture frames, i.e. [`APIC` frames](https://id3.org/id3v2.3.0#Attached_picture)
     - Comment frames, i.e. [`COMM` frames](https://id3.org/id3v2.3.0#Comments)
 
@@ -31,7 +32,9 @@ the ID3 tag from a file.
 final parser = ID3TagReader.path('path to a file');
 final tag = parser.readTagSync();
 print('Title: ${tag.title}');
-print('Chapters: ${tag.chapters}');
+print('All chapters: ${tag.chapters}');
+// Or: 
+print('Chapters in top level table of contents: ${tag.topLevelChapters}');
 ```
 
 During development, it may sometimes be convenient to use files in the form of asset resources. To accomplish this, you 
@@ -44,11 +47,6 @@ final ByteData fileData = await rootBundle.load('some asset file');
 final filePath = '${(await getTemporaryDirectory()).path}/a file name';
 File(filePath).writeAsBytesSync(fileData.buffer.asUint8List(fileData.offsetInBytes, fileData.lengthInBytes));
 ```
-
-
-## On the horizon
-
-The plan is to add support for reading the table of contents (`CTOC`) frame type.
 
 
 ## Additional information

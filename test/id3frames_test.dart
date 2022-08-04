@@ -6,27 +6,50 @@ import 'package:id3tag/src/extensions/iterable_extension.dart';
 
 
 void main() {
-  /*test('Truncate file to ID3 tag size', () {
-    final file = File('test/truncate.mp3');
-    final parser = ID3Parser(file);
-    final fileID3TagSize = parser.id3CompleteTagSize;
+  // test('Truncate file to ID3 tag size', () {
+  //   final file = File('test/truncated.mp3');
+  //   final parser = ID3Parser(file);
+  //   final fileID3TagSize = parser.id3CompleteTagSize;
+  //
+  //   final RandomAccessFile raf = file.openSync(mode: FileMode.append);
+  //   raf.truncateSync(fileID3TagSize);
+  //   raf.flushSync();
+  //   raf.closeSync();
+  // });
 
-    final RandomAccessFile raf = file.openSync(mode: FileMode.append);
-    raf.truncateSync(fileID3TagSize);
-    raf.flushSync();
-    raf.closeSync();
-  });*/
+  test('Tag should contain basic metadata', () {
+    final parser = ID3Parser(File('test/chap.mp3'));
+    final tag = parser.readTagSync();
+    expect(tag.tagFound, true);
+    expect(tag.tagVersion, "2.3.0");
+    expect(tag.title, isNotNull);
+    expect(tag.duration, isNotNull);
+    expect(tag.frameDictionaries.length, greaterThan(2));
+  });
 
   test('Tag should contain chapters', () {
     final parser = ID3Parser(File('test/chap.mp3'));
     final tag = parser.readTagSync();
-    // print('ID3 tag found: ${tag.tagFound} - version: ${tag.tagVersion}');
-    // print('Title: ${tag.title}');
-    // print('Duration: ${tag.duration}');
-    // print('Chapters: ${tag.chapters}');
-    // print('frameDictionaries: ${tag.frameDictionaries}');
-    final frame = tag.frames.firstWhereOrNull((f) => f.frameName == 'CHAP');
-    expect(frame, isNotNull);
+    final chapters = tag.chapters;
+    expect(chapters.length, 13);
+    expect(chapters.first.title, isNotEmpty);
+  });
+
+  test('Tag should contain table of contents', () {
+    final parser = ID3Parser(File('test/ctoc.mp3'));
+    final tag = parser.readTagSync();
+    final tableOfContents = tag.tableOfContents;
+    final topLevelTOC = tag.topLevelTOC;
+    expect(tableOfContents.length, greaterThan(0));
+    expect(topLevelTOC, isNotNull);
+
+    // Get chapters objects for the toc
+    final chapters = tag.chaptersForTOC(topLevelTOC!);
+    expect(chapters.length, 15);
+    expect(chapters.first.title, isNotEmpty);
+    // Check url and image support
+    expect(chapters[13].url?.url, isNotEmpty);
+    expect(chapters[14].picture?.imageData, isNotEmpty);
   });
 
   test('Tag should contain picture', () {

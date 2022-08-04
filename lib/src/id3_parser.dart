@@ -47,11 +47,11 @@ class ID3Parser implements ID3TagReader {
         _parsers = frameParsers, _id3TagBytes = id3TagBytes, _initialOffset = initialOffset;
 
   factory ID3Parser(File file, {Map<String, FrameParser>? frameParsers}) {
-    final RandomAccessFile _reader = file.openSync(mode: FileMode.read);
+    final RandomAccessFile reader = file.openSync(mode: FileMode.read);
 
     try {
-      final length = _reader.lengthSync();
-      final List<int> fileHeaderBytes = length > id3FileHeaderLength ? _reader.readSync(id3FileHeaderLength) : [];
+      final length = reader.lengthSync();
+      final List<int> fileHeaderBytes = length > id3FileHeaderLength ? reader.readSync(id3FileHeaderLength) : [];
       // Assume ID3 tag is at beginning of file
       final List<int>? id3FileTag = fileHeaderBytes.length == id3FileHeaderLength ? fileHeaderBytes.sublist(0, 3) : null;
 
@@ -59,7 +59,7 @@ class ID3Parser implements ID3TagReader {
         final headerBytes = fileHeaderBytes.toList();
         final header = ID3FileHeader.fromHeaderBytes(headerBytes);
 
-        final id3TagBytes = _reader.readSync(header.id3TagSize);
+        final id3TagBytes = reader.readSync(header.id3TagSize);
 
         int initialOffset = 0;
         if (header.hasExtendedHeader) {
@@ -74,7 +74,7 @@ class ID3Parser implements ID3TagReader {
             id3TagBytes: [], initialOffset: 0);
       }
     } finally {
-      _reader.closeSync();
+      reader.closeSync();
     }
   }
 
@@ -139,9 +139,9 @@ class ID3Parser implements ID3TagReader {
     final addParser = (FrameParser parser) => parserMap.addEntries(parser.frameNames.map((e) => MapEntry(e, parser)));
 
     addParser(ChapterFrameParser());
+    addParser(TableOfContentsFrameParser());
     addParser(CommentFrameParser());
     addParser(PictureFrameParser());
-    //addParser(TableOfContentsFrameParser()); // TODO
     addParser(TextInformationFrameParser());
     //addParser(UrlFrameParser()); // TODO
     addParser(UserUrlFrameParser());

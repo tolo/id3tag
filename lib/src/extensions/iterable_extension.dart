@@ -13,3 +13,10 @@ extension IterableExtensions<E> on Iterable<E> {
     }
   }
 }
+
+extension ListExtensions<E> on List<E> {
+  bool addNotNull(E? element) {
+    if (element != null) add(element);
+    return element != null;
+  }
+}
