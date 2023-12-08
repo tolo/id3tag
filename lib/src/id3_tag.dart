@@ -24,6 +24,12 @@ class ID3Tag {
   String? get trackNumber => track?.split('/').firstIfAny(minLength: 2);
   String? get trackTotal => track?.split('/').lastIfAny(minLength: 2);
 
+  String? get disc => frameWithTypeAndName<TextInformation>('TPOS')?.value;
+  String? get discNumber => disc?.split('/').firstIfAny(minLength: 2);
+  String? get discTotal => disc?.split('/').lastIfAny(minLength: 2);
+
+  String? get year => frameWithTypeAndName<TextInformation>('TYER')?.value;
+
   Duration? get duration {
     final durationRaw = frameWithTypeAndName<TextInformation>('TLEN')?.value;
     return durationRaw != null && durationRaw.isNotEmpty ? Duration(milliseconds: int.parse(durationRaw)) : null;
