@@ -33,6 +33,8 @@ class ID3Tag {
 
   String? get composer => frameWithTypeAndName<TextInformation>('TCOM')?.value;
 
+  String? get genre => frameWithTypeAndName<TextInformation>('TCON')?.value;
+
   Duration? get duration {
     final durationRaw = frameWithTypeAndName<TextInformation>('TLEN')?.value;
     return durationRaw != null && durationRaw.isNotEmpty ? Duration(milliseconds: int.parse(durationRaw)) : null;
