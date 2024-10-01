@@ -48,10 +48,11 @@ class ChapterFrameParser extends FrameParser<Chapter> {
     final frameContent = rawFrame.frameContent;
     final elementId = frameContent.readString(checkEncoding: false);
 
-    final int startTimeMilliseconds = frameContent.readInt();
-    final int endTimeMilliseconds = frameContent.readInt();
-    /*final int startByteOffset =*/ frameContent.readInt();
-    /*final int endByteOffset =*/ frameContent.readInt();
+    // Following four ints are not safe scan according to ID3v2.4
+    final int startTimeMilliseconds = frameContent.readIntRaw();
+    final int endTimeMilliseconds = frameContent.readIntRaw();
+    /*final int startByteOffset =*/ frameContent.readIntRaw();
+    /*final int endByteOffset =*/ frameContent.readIntRaw();
 
     String? chapterName;
     String? chapterDescription;

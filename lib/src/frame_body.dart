@@ -134,7 +134,10 @@ class FrameBody {
   int readInt() {
     return readBytes(4).parseInt(tagMinorVersion);
   }
-
+  int readIntRaw() {
+    return readBytes(4).parseInt(-1);// force non safescan
+  }
+  
   List<int> readRemainingBytes() {
     return buffer.sublist(pos);
   }
