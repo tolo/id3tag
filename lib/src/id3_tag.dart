@@ -17,12 +17,23 @@ class ID3Tag {
   String? get title => frameWithTypeAndName<TextInformation>('TIT2')?.value;
 
   String? get artist => frameWithTypeAndName<TextInformation>('TPE1')?.value;
+  String? get albumArtist => frameWithTypeAndName<TextInformation>('TPE2')?.value;
 
   String? get album => frameWithTypeAndName<TextInformation>('TALB')?.value;
 
   String? get track => frameWithTypeAndName<TextInformation>('TRCK')?.value;
   String? get trackNumber => track?.split('/').firstIfAny(minLength: 2);
   String? get trackTotal => track?.split('/').lastIfAny(minLength: 2);
+
+  String? get disc => frameWithTypeAndName<TextInformation>('TPOS')?.value;
+  String? get discNumber => disc?.split('/').firstIfAny(minLength: 2);
+  String? get discTotal => disc?.split('/').lastIfAny(minLength: 2);
+
+  String? get year => frameWithTypeAndName<TextInformation>('TYER')?.value;
+
+  String? get composer => frameWithTypeAndName<TextInformation>('TCOM')?.value;
+
+  String? get genre => frameWithTypeAndName<TextInformation>('TCON')?.value;
 
   Duration? get duration {
     final durationRaw = frameWithTypeAndName<TextInformation>('TLEN')?.value;
